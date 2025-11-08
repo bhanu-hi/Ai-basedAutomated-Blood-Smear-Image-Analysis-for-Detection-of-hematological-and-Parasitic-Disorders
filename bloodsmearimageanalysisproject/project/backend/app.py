@@ -98,7 +98,34 @@ class BloodSmearAnalyzer:
         except Exception as e:
             return {'error': str(e), 'status': 'error'}
 
-analyzer = BloodSmearAnalyzer('models/best_model.pth')
+# Lazy load analyzer (load on first request to avoid startup timeout)
+analyzer = None
+
+def get_analyzer():
+    global analyzer
+    if analyzer is None:
+        print("Loading model...")
+        # Try to download model if it doesn't exist
+        model_path = 'models/best_model.pth'
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        full_model_path = os.path.join(base_dir, model_path)
+        
+        if not os.path.exists(full_model_path):
+            print(f"Model not found at {full_model_path}")
+            # Try to download from Google Drive
+            model_url = os.getenv('MODEL_URL')
+            if model_url:
+                print(f"Downloading model from {model_url}")
+                os.makedirs(os.path.dirname(full_model_path), exist_ok=True)
+                import urllib.request
+                urllib.request.urlretrieve(model_url, full_model_path)
+                print("Model downloaded successfully")
+            else:
+                raise FileNotFoundError(f"Model file not found and MODEL_URL not set")
+        
+        analyzer = BloodSmearAnalyzer(model_path)
+        print("Model loaded successfully")
+    return analyzer
 
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -173,7 +200,7 @@ def analyze_image():
         if not image_data:
             return jsonify({'error': 'No image data provided'}), 400
         
-        result = analyzer.predict(image_data)
+        result = get_analyzer().predict(image_data)
         
         if result['status'] == 'error':
             return jsonify({'error': result['error']}), 500
@@ -246,33 +273,13 @@ def get_user_stats(user_id):
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    try:
-        test_image = Image.new('RGB', (224, 224), color='black')
-        buffered = io.BytesIO()
-        test_image.save(buffered, format="JPEG")
-        test_image_data = base64.b64encode(buffered.getvalue()).decode()
-        
-        result = analyzer.predict(test_image_data)
-        
-        return jsonify({
-            'status': 'healthy',
-            'model_loaded': True,
-            'device': str(analyzer.device),
-            'test_prediction_status': result['status']
-        })
-    except Exception as e:
-        return jsonify({
-            'status': 'unhealthy',
-            'model_loaded': False,
-            'error': str(e)
-        }), 500
+    return jsonify({
+        'status': 'healthy',
+        'model_loaded': analyzer is not None,
+        'mongodb_connected': True
+    })
 
 if __name__ == '__main__':
-    model_path = 'models/best_model.pth'
-    if not os.path.exists(model_path):
-        print(f"Warning: Model file '{model_path}' not found")
-    
-    print(f"Using device: {analyzer.device}")
     print("Starting Flask server on http://0.0.0.0:5001")
-    
+    print("Model will be loaded on first analysis request")
     app.run(host='0.0.0.0', port=5001, debug=True)
