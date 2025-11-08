@@ -66,23 +66,30 @@ Server will run on `http://localhost:5001`
 ### 5. Open the Application
 Open `bloodsmearimageanalysisproject/project/index.html` in your browser
 
-## 🌐 Deployment on Render
+## 🌐 Deployment
 
-### Backend Deployment
+### Deploy on Vercel (Recommended)
+
+See detailed guide: [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md)
+
+**Quick Steps**:
+1. Setup MongoDB Atlas (free cloud database)
+2. Connect GitHub repo to Vercel
+3. Add `MONGO_URI` environment variable
+4. Deploy!
+
+**One-Click Deploy**:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/BhanU303545/bloodsmearimageanalysisproject)
+
+### Alternative: Deploy on Render
 
 1. **Create a new Web Service** on Render
 2. **Connect your GitHub repository**
 3. **Configure the service**:
    - **Build Command**: `pip install -r bloodsmearimageanalysisproject/project/backend/requirements.txt`
-   - **Start Command**: `cd bloodsmearimageanalysisproject/project/backend && python app.py`
+   - **Start Command**: `cd bloodsmearimageanalysisproject/project/backend && gunicorn --bind 0.0.0.0:$PORT app:app`
    - **Environment Variables**:
      - `MONGO_URI`: Your MongoDB connection string
-     - `PORT`: 5001
-
-### Frontend Deployment
-
-1. **Create a Static Site** on Render
-2. **Set publish directory**: `bloodsmearimageanalysisproject/project`
 
 ## 📊 Model Information
 
