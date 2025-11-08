@@ -1,7 +1,7 @@
 // js/dashboard.js - Updated for Flask backend
 import { requireAuth, updateUserInfo } from './auth.js';
 
-const API_BASE = 'http://localhost:5001/api';
+const API_BASE = 'https://ai-basedautomated-blood-smear-image-3lg0.onrender.com/api';
 
 document.addEventListener('DOMContentLoaded', function() {
     const user = requireAuth();
