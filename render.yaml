@@ -1,0 +1,22 @@
+services:
+  # Backend API Service
+  - type: web
+    name: bloodsmear-backend
+    env: python
+    region: oregon
+    buildCommand: pip install -r bloodsmearimageanalysisproject/project/backend/requirements.txt
+    startCommand: cd bloodsmearimageanalysisproject/project/backend && gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: MONGO_URI
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+    healthCheckPath: /api/health
+
+  # Frontend Static Site
+  - type: web
+    name: bloodsmear-frontend
+    env: static
+    region: oregon
+    buildCommand: echo "No build needed"
+    staticPublishPath: bloodsmearimageanalysisproject/project
