@@ -17,7 +17,7 @@ app = Flask(__name__)
 CORS(app)
 
 # MongoDB Configuration (Authenticated)
-MONGO_URI = 'mongodb://bhanu:bhanu123@localhost:27017/bloodsmear?authSource=admin'
+MONGO_URI = os.getenv('MONGO_URI', 'mongodb://bhanu:bhanu123@localhost:27017/bloodsmear?authSource=admin')
 DB_NAME = 'bloodsmear'
 
 # Connect to MongoDB
