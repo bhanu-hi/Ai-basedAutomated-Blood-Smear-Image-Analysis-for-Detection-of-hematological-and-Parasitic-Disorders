@@ -2,28 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "bloodsmearimageanalysisproject/project/backend/app.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "50mb"
-      }
-    },
-    {
       "src": "bloodsmearimageanalysisproject/project/**",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "bloodsmearimageanalysisproject/project/backend/app.py"
-    },
-    {
       "src": "/(.*)",
       "dest": "bloodsmearimageanalysisproject/project/$1"
     }
-  ],
-  "env": {
-    "MONGO_URI": "@mongo_uri"
-  }
+  ]
 }
