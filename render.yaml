@@ -4,8 +4,8 @@ services:
     name: bloodsmear-backend
     env: python
     region: oregon
-    buildCommand: pip install -r bloodsmearimageanalysisproject/project/backend/requirements.txt
-    startCommand: cd bloodsmearimageanalysisproject/project/backend && gunicorn --bind 0.0.0.0:$PORT app:app
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd bloodsmearimageanalysisproject/project/backend && gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 app:app
     envVars:
       - key: MONGO_URI
         sync: false
