@@ -32,6 +32,11 @@ class BloodSmearAnalyzer:
     def __init__(self, model_path='models/best_model.pth'):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
+        # Get absolute path to model file
+        if not os.path.isabs(model_path):
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(base_dir, model_path)
+        
         checkpoint = torch.load(model_path, map_location=self.device)
         self.class_names = checkpoint['class_names']
         
