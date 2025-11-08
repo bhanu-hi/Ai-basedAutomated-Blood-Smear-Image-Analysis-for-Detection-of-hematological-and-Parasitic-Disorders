@@ -20,13 +20,22 @@ CORS(app)
 MONGO_URI = os.getenv('MONGO_URI', 'mongodb://bhanu:bhanu123@localhost:27017/bloodsmear?authSource=admin')
 DB_NAME = 'bloodsmear'
 
-# Connect to MongoDB
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-users_collection = db['users']
-analyses_collection = db['analyses']
-
-print(f"Connected to MongoDB: {DB_NAME}")
+# Connect to MongoDB with error handling
+try:
+    client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+    # Test connection
+    client.admin.command('ping')
+    db = client[DB_NAME]
+    users_collection = db['users']
+    analyses_collection = db['analyses']
+    print(f"✅ Connected to MongoDB: {DB_NAME}")
+except Exception as e:
+    print(f"❌ MongoDB connection failed: {e}")
+    print(f"MONGO_URI: {MONGO_URI[:50]}...")
+    # Don't crash, let the app start anyway
+    db = None
+    users_collection = None
+    analyses_collection = None
 
 class BloodSmearAnalyzer:
     def __init__(self, model_path='models/best_model.pth'):
@@ -130,6 +139,9 @@ def get_analyzer():
 @app.route('/api/register', methods=['POST'])
 def register():
     try:
+        if users_collection is None:
+            return jsonify({'error': 'Database not connected'}), 503
+            
         data = request.json
         email = data.get('email')
         password = data.get('password')
@@ -288,10 +300,20 @@ def root():
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
+    mongodb_status = False
+    try:
+        if db is not None:
+            client.admin.command('ping')
+            mongodb_status = True
+    except:
+        pass
+    
     return jsonify({
         'status': 'healthy',
         'model_loaded': analyzer is not None,
-        'mongodb_connected': True
+        'mongodb_connected': mongodb_status,
+        'mongo_uri_set': bool(os.getenv('MONGO_URI')),
+        'model_url_set': bool(os.getenv('MODEL_URL'))
     })
 
 if __name__ == '__main__':
