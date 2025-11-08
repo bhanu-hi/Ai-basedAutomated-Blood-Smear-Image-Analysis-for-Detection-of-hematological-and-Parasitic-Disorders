@@ -271,6 +271,21 @@ def get_user_stats(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/', methods=['GET'])
+def root():
+    return jsonify({
+        'message': 'Blood Smear Analysis API',
+        'version': '1.0',
+        'endpoints': {
+            'health': '/api/health',
+            'register': '/api/register',
+            'login': '/api/login',
+            'analyze': '/api/analyze',
+            'results': '/api/results',
+            'stats': '/api/stats/<user_id>'
+        }
+    })
+
 @app.route('/api/health', methods=['GET'])
 def health_check():
     return jsonify({
