@@ -18,6 +18,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://bhanu:bhanu123@localho
 const DB_NAME = process.env.MONGODB_DB_NAME || 'bloodsmear';
 
 let db;
+let client;
 let model = null; // Will hold the loaded model
 
 // Load ML Model (PyTorch model)
@@ -46,17 +47,33 @@ async function loadModel() {
     }
 }
 
-// Connect to MongoDB
-MongoClient.connect(MONGODB_URI, { useUnifiedTopology: true })
-    .then(async client => {
+// Connect to MongoDB (serverless-friendly)
+async function connectToDatabase() {
+    if (db) {
+        return db;
+    }
+    
+    try {
+        console.log('Connecting to MongoDB...');
+        client = await MongoClient.connect(MONGODB_URI, { 
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000
+        });
         console.log('Connected to MongoDB (authenticated)');
         console.log(`Database: ${DB_NAME}`);
         db = client.db(DB_NAME);
         
-        // Load the model
-        model = await loadModel();
-    })
-    .catch(error => console.error('MongoDB connection error:', error));
+        // Load the model (only once)
+        if (!model) {
+            model = await loadModel();
+        }
+        
+        return db;
+    } catch (error) {
+        console.error('MongoDB connection error:', error);
+        throw error;
+    }
+}
 
 // Middleware
 app.use(cors());
@@ -67,8 +84,11 @@ app.post('/api/register', async (req, res) => {
     try {
         const { email, password, full_name, role } = req.body;
 
+        // Ensure database connection
+        const database = await connectToDatabase();
+
         // Check if user already exists
-        const existingUser = await db.collection('users').findOne({ email });
+        const existingUser = await database.collection('users').findOne({ email });
         if (existingUser) {
             return res.json({ error: 'User already exists' });
         }
@@ -77,7 +97,7 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create user
-        const result = await db.collection('users').insertOne({
+        const result = await database.collection('users').insertOne({
             email,
             password: hashedPassword,
             full_name,
@@ -104,8 +124,11 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        // Ensure database connection
+        const database = await connectToDatabase();
+
         // Find user
-        const user = await db.collection('users').findOne({ email });
+        const user = await database.collection('users').findOne({ email });
         if (!user) {
             return res.json({ error: 'Invalid credentials' });
         }
@@ -135,6 +158,9 @@ app.post('/api/analyze', async (req, res) => {
     try {
         const { image, user_id, notes } = req.body;
 
+        // Ensure database connection
+        const database = await connectToDatabase();
+
         // TODO: Use best_model.pth (EfficientNet-B0) model for predictions
         // Currently using mock data until model integration is complete
         // Model path: ${MODEL_PATH}
@@ -149,7 +175,7 @@ app.post('/api/analyze', async (req, res) => {
         const allPredictions = predictionResult.all_predictions;
 
         // Save analysis to database
-        const analysis = await db.collection('analyses').insertOne({
+        const analysis = await database.collection('analyses').insertOne({
             user_id,
             image_data: image,
             analysis_type: 'upload',
@@ -158,7 +184,7 @@ app.post('/api/analyze', async (req, res) => {
         });
 
         // Save result
-        const result = await db.collection('results').insertOne({
+        const result = await database.collection('results').insertOne({
             analysis_id: analysis.insertedId.toString(),
             user_id,
             predicted_disease: topPrediction.disease,
@@ -188,14 +214,17 @@ app.get('/api/results', async (req, res) => {
     try {
         const { user_id } = req.query;
 
-        const results = await db.collection('results')
+        // Ensure database connection
+        const database = await connectToDatabase();
+
+        const results = await database.collection('results')
             .find({ user_id })
             .sort({ created_at: -1 })
             .toArray();
 
         // Get analysis data for each result
         const resultsWithAnalyses = await Promise.all(results.map(async (result) => {
-            const analysis = await db.collection('analyses').findOne({
+            const analysis = await database.collection('analyses').findOne({
                 _id: new ObjectId(result.analysis_id)
             });
             return {
@@ -222,12 +251,15 @@ app.get('/api/stats/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
-        const analyses = await db.collection('analyses')
+        // Ensure database connection
+        const database = await connectToDatabase();
+
+        const analyses = await database.collection('analyses')
             .find({ user_id: userId })
             .sort({ created_at: -1 })
             .toArray();
 
-        const results = await db.collection('results')
+        const results = await database.collection('results')
             .find({ user_id: userId })
             .sort({ created_at: -1 })
             .toArray();
@@ -244,7 +276,10 @@ app.delete('/api/results/:resultId', async (req, res) => {
     try {
         const { resultId } = req.params;
 
-        await db.collection('results').deleteOne({ _id: new ObjectId(resultId) });
+        // Ensure database connection
+        const database = await connectToDatabase();
+
+        await database.collection('results').deleteOne({ _id: new ObjectId(resultId) });
 
         res.json({ success: true });
     } catch (error) {
