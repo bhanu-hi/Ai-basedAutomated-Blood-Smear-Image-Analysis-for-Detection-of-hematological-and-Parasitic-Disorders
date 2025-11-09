@@ -25,8 +25,8 @@ def load_model():
     """Load the EfficientNet-B0 PyTorch model"""
     global CLASS_NAMES
     try:
-        # Load checkpoint
-        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
+        # Load checkpoint with weights_only=False to handle older PyTorch versions
+        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
         CLASS_NAMES = checkpoint['class_names']
         
         # Create EfficientNet-B0 model

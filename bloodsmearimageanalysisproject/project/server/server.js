@@ -13,8 +13,9 @@ const MODEL_PATH = path.join(__dirname, '..', 'backend', 'models', 'best_model.p
 const MODEL_NAME = 'best_model.pth';
 
 // MongoDB connection (Authenticated)
-const MONGODB_URI = 'mongodb://bhanu:bhanu123@localhost:27017/bloodsmear?authSource=admin';
-const DB_NAME = 'bloodsmear';
+// Use environment variable for production (Vercel) or fallback to local
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://bhanu:bhanu123@localhost:27017/bloodsmear?authSource=admin';
+const DB_NAME = process.env.MONGODB_DB_NAME || 'bloodsmear';
 
 let db;
 let model = null; // Will hold the loaded model
@@ -252,8 +253,14 @@ app.delete('/api/results/:resultId', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`MongoDB URI: ${MONGODB_URI}`);
-    console.log(`Database: ${DB_NAME}`);
-});
+// Export for Vercel serverless functions
+module.exports = app;
+
+// Start server only when running locally (not on Vercel)
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+        console.log(`MongoDB URI: ${MONGODB_URI}`);
+        console.log(`Database: ${DB_NAME}`);
+    });
+}

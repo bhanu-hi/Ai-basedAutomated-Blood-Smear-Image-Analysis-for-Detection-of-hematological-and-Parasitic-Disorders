@@ -1,5 +1,5 @@
 {
-  "name": "starter",
+  "name": "blood-smear-analysis",
   "private": true,
   "scripts": {
     "dev": "vite",
@@ -7,12 +7,16 @@
     "preview": "vite preview"
   },
   "version": "1.0.0",
-  "description": "",
+  "description": "Blood Smear Analysis Application",
   "main": "index.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "vite": "^7.1.12"
+    "vite": "^7.1.12",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "mongodb": "^5.9.0",
+    "bcryptjs": "^2.4.3"
   }
 }
