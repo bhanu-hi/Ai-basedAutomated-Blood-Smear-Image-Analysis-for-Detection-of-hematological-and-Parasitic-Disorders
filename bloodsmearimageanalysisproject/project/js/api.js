@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://ai-basedautomated-blood-smear-image-3lg0.onrender.com/api';
+const API_BASE_URL = '/api';
 
 const authAPI = {
     async register(userData) {

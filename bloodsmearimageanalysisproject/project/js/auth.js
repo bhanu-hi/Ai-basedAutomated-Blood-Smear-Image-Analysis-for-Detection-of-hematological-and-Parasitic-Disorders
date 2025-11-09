@@ -1,4 +1,4 @@
-const API_BASE = 'https://ai-basedautomated-blood-smear-image-3lg0.onrender.com/api';
+const API_BASE = '/api';
 
 export function getCurrentUser() {
     const user = localStorage.getItem('currentUser');
