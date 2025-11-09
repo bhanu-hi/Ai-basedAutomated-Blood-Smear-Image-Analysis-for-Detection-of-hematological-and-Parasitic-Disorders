@@ -1,0 +1,26 @@
+RENDER ENVIRONMENT VARIABLES SETUP
+===================================
+
+Go to: https://dashboard.render.com
+Select: bloodsmear-backend service
+Click: Environment (left sidebar)
+Click: Add Environment Variable
+
+ADD THESE VARIABLES:
+--------------------
+
+1. MONGO_URI
+   Value: mongodb+srv://tungalabhanuprakash3_db_user:bhanu@143@cluster0.xpeq7r7.mongodb.net/bloodsmear
+
+2. MODEL_URL
+   Value: https://drive.google.com/uc?export=download&id=1pAfCFXjqnGCPg_7XY5yuEzRbQ-mzR7Dw
+
+3. PYTHON_VERSION (Optional)
+   Value: 3.11.0
+
+After adding, click "Save Changes" and Render will auto-redeploy.
+
+IMPORTANT:
+- Make sure the Google Drive file is set to "Anyone with the link can view"
+- First analysis request will take 1-2 minutes (model download)
+- Subsequent requests will be fast
